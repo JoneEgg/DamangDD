@@ -50,12 +50,6 @@
         if (empty($errors)){
             $adminValue = $is_admin ? 1 : 0;
             $insertResult = pg_query_params($conn, 'INSERT INTO user_details (user_name, password, admin) VALUES ($1, $2, $3)', [$username, $passwordHash, $adminValue]);
-
-            if($insertResult){
-                echo "Registered successfully! <br><br>";
-            } else {
-                echo 'Database error ' . pg_last_error($conn);
-            }
         }
     }
 ?>
@@ -65,31 +59,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <title>Registration</title>
 </head>
-<body>
-    <form method="POST">
-        <label for="username">Username: <br>
-            <input type="text" placeholder="Username" name="username" value="<?php echo (isset($_POST['username'])) ? $_POST['username'] : ''; ?>">
-        </label>
-        <br><br>
-        <label for="password">Password: <br>
-            <input type="password" placeholder="Password" name="password">
-        </label>
+<body id="form_body">
+    <div id="container">
+        <div id="banner">
+            <img id="logo_img" src="./images/DDD_logo.png" alt="Damang, Don't Drown! Logo">
+        </div>
         
-        <br><br>
-        <label for="confirm password">Confirm Password: <br>
-            <input type="password" placeholder="Confirm password" name="confirm_pass">
-        </label>
-        <br><br>
-        <label for="admin">Are you an admin? 
-            <input type="checkbox" name="admin_access" value="<?php echo isset($_POST['admin_access']) ? 'checked' : ''; ?>">
-        </label>
-        <br><br><br>
-        <button type="submit">Register</button>
-    </form>
-    <br>
-    <a href="login.php">Login</a>
+        <form method="POST">
+            <div id="form-group">
+                <label for="username">Username<br>
+                    <input type="text" class="form-control" placeholder="Username" name="username" value="<?php echo (isset($_POST['username'])) ? $_POST['username'] : ''; ?>">
+                </label>
+            </div>
+            <br>
+            <div id="form-group">
+                <label for="password">Password <br>
+                    <input type="password" class="form-control" placeholder="Password" name="password">
+                </label>
+            </div>  
+            <br>
+            <div id="form-group">
+                <label for="confirm password">Confirm Password<br>
+                    <input type="password" class="form-control" placeholder="Confirm password" name="confirm_pass">
+                </label>
+            </div>
+            <br>
+            <div class="form-group form-check">
+                <label for="admin">Are you an admin? 
+                <input type="checkbox" class="form-check-input" name="admin_access" value="<?php echo isset($_POST['admin_access']) ? 'checked' : ''; ?>">
+            </label>
+            </div>
+            <br><br>
+            <button type="submit" class="btn btn-secondary">Register</button> 
+            <br><br>
+            <p>Already have an account? Log in <a href="login.php">here!</a></p>
+        </form>
+        <br>
+    </div>
 
 <!-- DISPLAYING ERRORS ==================================================== -->
     <?php 
@@ -97,5 +107,6 @@
             echo $error . "<br>";
         }
     ?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 </body>
 </html>
