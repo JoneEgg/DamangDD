@@ -1,6 +1,7 @@
 <?php
+    session_start();
     include('db.php');
-    $error = "";
+    $errors = [];
 
     if ($_SERVER["REQUEST_METHOD"] == "POST"){
         $username = $_POST['username'];
@@ -11,11 +12,15 @@
 
         if ($user){
             if (password_verify($password, $user['password'])){
-                $_SESSION['username'] = $user['username'];
+                $_SESSION['username'] = $user['user_name'];
                 header("Location: main_menu.php");
-            } else {
-                $error = "Invalid Credentials";
-            }
+                if ($user['admin'] == 1){
+                    $_SESSION['admin_access'] = $user['admin'];
+                    header("Location: admin_view.php");
+                } 
+            } 
+        } else {
+            $errors[] = "Invalid Credentials";
         }
     }
 ?>
@@ -40,5 +45,12 @@
         <br><br>
         <a href="register.php">Register</a>
     </form>
+
+<!-- DISPLAYING ERRORS ==================================================== -->
+    <?php 
+        foreach($errors as $error){
+            echo $error . "<br>";
+        }
+    ?>
 </body>
 </html>

@@ -1,12 +1,15 @@
 <?php
+    session_start();
     include('db.php');
 
     $errors = [];
 
-    if ($_SERVER['REQUEST_METHOD'] == ['POST']){
+    if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         $username = $_POST['username'];
         $password = $_POST['password'];
         $confirm_pass = $_POST['confirm_pass'];
+        $is_admin = isset($_POST['admin_access']);
+
 # USERNAME FILTERS ====================================================
         if (empty($username)){
             $errors[] = "Username is required";
@@ -45,9 +48,14 @@
         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 # SUCCESS ====================================================
         if (empty($errors)){
-            pg_query_params($conn, 'INSERT INTO user_details (user_name, password) VALUES ($1, $2)', [$username, $passwordHash]);
-            
-            echo "Registered successfully!";
+            $adminValue = $is_admin ? 1 : 0;
+            $insertResult = pg_query_params($conn, 'INSERT INTO user_details (user_name, password, admin) VALUES ($1, $2, $3)', [$username, $passwordHash, $adminValue]);
+
+            if($insertResult){
+                echo "Registered successfully! <br><br>";
+            } else {
+                echo 'Database error ' . pg_last_error($conn);
+            }
         }
     }
 ?>
@@ -60,9 +68,9 @@
     <title>Registration</title>
 </head>
 <body>
-    <form method="POST"
+    <form method="POST">
         <label for="username">Username: <br>
-            <input type="text" placeholder="Username" name="username" value="<?php echo (isset($_POST['username'])) ? $_POST['username'] : ""; ?>">
+            <input type="text" placeholder="Username" name="username" value="<?php echo (isset($_POST['username'])) ? $_POST['username'] : ''; ?>">
         </label>
         <br><br>
         <label for="password">Password: <br>
@@ -74,9 +82,13 @@
             <input type="password" placeholder="Confirm password" name="confirm_pass">
         </label>
         <br><br>
+        <label for="admin">Are you an admin? 
+            <input type="checkbox" name="admin_access" value="<?php echo isset($_POST['admin_access']) ? 'checked' : ''; ?>">
+        </label>
+        <br><br><br>
         <button type="submit">Register</button>
     </form>
-    <br><br>
+    <br>
     <a href="login.php">Login</a>
 
 <!-- DISPLAYING ERRORS ==================================================== -->
