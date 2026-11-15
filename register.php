@@ -10,8 +10,8 @@
 # USERNAME FILTERS ====================================================
         if (empty($username)){
             $errors[] = "Username is required";
-        } else if (strlen($username) != 8) {
-            $errors[] = "Username must be 8 characters long";
+        } else if (strlen($username) < 8) {
+            $errors[] = "Username must be 8 characters long or higher";
         }
 
         $usernamePattern = '/^(?=.*[\S])(?=.*[\s]).+$/';
@@ -20,7 +20,7 @@
             $errors[] = "Username must not have white space";
         }
 
-        $result = pg_query_params($conn, 'SELECT user_name FROM user_details WHERE user_name = $username]');
+        $result = pg_query_params($conn, 'SELECT user_name FROM user_details WHERE user_name = $1', [$username]);
 
         if (pg_fetch_assoc($result)){
             $errors[] = "Username already exists";
@@ -45,7 +45,7 @@
         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 # SUCCESS ====================================================
         if (empty($errors)){
-            pg_query_params($conn, 'INSERT INTO user_details (user_name, password) VALUES (user_name = $username, password = $password)');
+            pg_query_params($conn, 'INSERT INTO user_details (user_name, password) VALUES ($1, $2)', [$username, $passwordHash]);
             
             echo "Registered successfully!";
         }
@@ -61,14 +61,18 @@
 </head>
 <body>
     <form method="POST"
-        <label for="username">Usernane: </label>
-        <input type="text" name="username" value="<?php echo (isset($_POST['username'])) ? $_POST['username'] : ""; ?>">
+        <label for="username">Username: <br>
+            <input type="text" placeholder="Username" name="username" value="<?php echo (isset($_POST['username'])) ? $_POST['username'] : ""; ?>">
+        </label>
         <br><br>
-        <label for="password">Password: </label>
-        <input type="password" name="password">
+        <label for="password">Password: <br>
+            <input type="password" placeholder="Password" name="password">
+        </label>
+        
         <br><br>
-        <label for="confirm password">Confirm Password: </label>
-        <input type="password" name="confirm_pass">
+        <label for="confirm password">Confirm Password: <br>
+            <input type="password" placeholder="Confirm password" name="confirm_pass">
+        </label>
         <br><br>
         <button type="submit">Register</button>
     </form>
