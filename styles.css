@@ -2,6 +2,13 @@
     font-family: 'Courier New', Courier, monospace;
 }
 
+table, th, td {
+    border: 1px solid rgb(131, 131, 131);
+    padding: 10px;
+    padding-left: 30px;
+
+}
+
 #admin_body {
     margin: 0;
     background-color: white;

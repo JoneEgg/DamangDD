@@ -115,6 +115,7 @@
     let bestScore = 0;
     let rockTimer = 0;
     let newRecord = false; 
+    let lives = 4;
     //for platform and enemy spacing
     const platformWidth = 120;
     const platformHeight = 20;
@@ -283,7 +284,7 @@
     //rock generation
     function updateRocks(dt) {
         rockTimer += dt;
-        if (rockTimer >= 60) { // 1 rock per 1 sec
+        if (rockTimer >= 180) { // 1 rock per 1 sec
             rockTimer = 0;
             createRock();
         }
@@ -350,7 +351,6 @@
         }
 
         if (player.y > cameraY + canvas.height) {
-            saveScore();
             resetGame();
         }
     }
@@ -365,7 +365,6 @@
                 player.y < e.y + half &&
                 player.y + player.height > e.y - half
             ) {
-                saveScore();
                 resetGame();
                 return;
             }
@@ -382,30 +381,17 @@
         ) / 2;
         for (let r of rocks) {
             if (Math.hypot(cx - r.x, cy - r.y) < playerRadius + r.size) {
-                saveScore();
                 resetGame();
                 return;
             }
         }
     }
 
-    //save score
-    function saveScore() {
-        if (!newRecord) return;
-            fetch('saveScore.php', {
-                method: 'POST',
-                body: new URLSearchParams({bestCoins, bestScore})
-            })
-            .then(res => {
-                if (res.ok) newRecord = false;
-            });
-        }
-    
-    //reset func
+    //reset func and save score
+        // as long as the lives aren't 0, the player's last height and coins collected are saved, then they're reset
+        // only saves the score and height once all lives are depleted
     function resetGame() {
-        
-        score = 0;
-        coinCount = 0;
+        lives -= 1;
 
         player.x = gameWidth / 2 - 20;
         player.y = canvas.height - 150;
@@ -423,8 +409,21 @@
 
         rocks = [];
         coins = [];
-        
 
+        if (lives == 0) {
+            lives = 3;
+            score = 0;
+            coinCount = 0;
+
+            if (!newRecord) return; 
+                fetch('saveScore.php', {
+                    method: 'POST',
+                    body: new URLSearchParams({bestCoins, bestScore})
+                })
+                .then(res => {
+                    if (res.ok) newRecord = false;
+            });
+        }
     }
 
     //draw
@@ -482,7 +481,7 @@
             );
         }
 
-        ctx.fillStyle = "#2b6cff";
+        ctx.fillStyle = "#2b6cff"; // player
         ctx.fillRect(
             gameLeft + player.x,
             player.y - cameraY,
@@ -491,7 +490,7 @@
             player.height
         );
 
-        ctx.fillStyle = "#555555";
+        ctx.fillStyle = "#555555"; //platform
         for (let r of rocks) {
             ctx.beginPath();
             ctx.arc(
@@ -511,6 +510,7 @@
         ctx.fillText("Coins Collected: " + coinCount, gameLeft + 12, 28);
         ctx.fillText("Height: " + score, gameLeft + 12, 54);
         ctx.textAlign = "right";
+        ctx.fillText("Lives Left: " + lives, gameLeft + gameWidth - 12, 28);
         // ctx.fillText("Most coins collected: " + bestCoins, gameLeft + gameWidth - 12, 28);
         // ctx.fillText("Highest height reached: " + bestScore, gameLeft + gameWidth - 12, 54);
     }
@@ -537,7 +537,6 @@
         gameLeft = (canvas.width - gameWidth) / 2;
     });
     
-    saveScore();
     resetGame();
     requestAnimationFrame(gameLoop);
 

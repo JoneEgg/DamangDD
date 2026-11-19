@@ -6,6 +6,12 @@
         header("Location: login.php");
         exit();
     }
+
+    if ($_SERVER['REQUEST_METHOD'] == "POST"){
+        $user_key = implode(" ", $_POST['disable_user']);
+        $_SESSION['user_key'] = $user_key;
+        header("Location: disable.php");
+    }
 ?>
 
 
@@ -28,19 +34,31 @@
         </div>
         <p><b>Welcome to Admin Access!</b><br></p>
        
-        <ul class="list-group">
-            <?php
-                $results = pg_query($conn, 'SELECT * FROM user_details');
-                $user = pg_fetch_all($results);
-                        // This should actually be showing all the scores from the /scores/ table, but as of 11/16/2026 the main gameplay code is still not available.
+        <form method="POST">
+            <table class="list-group">
+                <tr>
+                    <th>User</th>
+                    <th>Score</th>
+                    <th>Height</th>
+                    <th></th>
+                </tr>
 
-                foreach($user as $u){
-                    echo "<li class='list-group-item'>" . $u['user_name'] . "  <a href='delete.php'>Delete</a>";
-                        // Delete not functioning yet, fix:
-                            // Each loop should present their id as a hidden variable which will be read by the sql query in /delete.php/.
-                }
-            ?>
-        </ul>
+                    <?php
+                        $results = pg_query($conn, 'SELECT * FROM scores ORDER BY high_score DESC');
+                        $user = pg_fetch_all($results);
+
+                        foreach($user as $u): 
+                            $uname = htmlspecialchars($u['user_name'], ENT_QUOTES, 'UTF-8');?>
+                            
+                        <tr>
+                            <td><?php echo $uname ?></td>
+                            <td><?php echo $u['high_score'] ?> </td>
+                            <td><?php echo $u['height_reached'] ?> </td>
+                            <td> <button type="submit" name="disable_user" value="<? $uname ?>" class="btn btn-secondary">Disable</button> </td>
+                        </tr>
+                    <?php endforeach; ?>                    
+            </table>
+        </form>
 
         <br><br>
         <a href="logout.php">Exit</a>
