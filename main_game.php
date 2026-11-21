@@ -32,6 +32,9 @@
 </head>
 <body id="main_body">
 <canvas id="gameCanvas"></canvas>
+<img id="spiderGifOverlay" src="images/dante.gif" alt="Dante" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+<img id="spiderChargeGifOverlay" src="images/dante_charge.gif" alt="Dante Charging" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+<img id="spiderWalkGifOverlay" src="images/dante_walk.gif" alt="Dante Walking" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
 
 <script>
 
@@ -50,28 +53,67 @@
     };
 
     // ==========================================
-    // PLAYER SPRITE SETUP
+    // REUSABLE SPRITE HELPERS & ASSETS
     // ==========================================
-    const spiderSprite = new Image();
-    let spiderSpriteLoaded = false;
+    function createSpriteAsset(src, overlayId, fallbackMessage) {
+        const image = new Image();
+        const asset = {
+            image,
+            loaded: false,
+            overlay: overlayId ? document.getElementById(overlayId) : null
+        };
 
-    spiderSprite.onload = function() {
-        spiderSpriteLoaded = true;
+        image.onload = function() {
+            asset.loaded = true;
     };
-    spiderSprite.onerror = function() {
-        spiderSpriteLoaded = false;
-        console.warn("Spider sprite failed to load; using fallback box.");
-    };
+        image.onerror = function() {
+            asset.loaded = false;
+            if (fallbackMessage) {
+                console.warn(fallbackMessage);
+            }
+        };
+        image.src = src;
 
-    // Update this path to match the Spider sprite
-    spiderSprite.src = "images/dante.png";
+        return asset;
+    }
+    function isSpriteReady(asset) {
+        return Boolean(
+            asset &&
+            asset.loaded &&
+            asset.image.naturalWidth > 0 &&
+            asset.image.naturalHeight > 0
+        );
+    }
+    function hideSpriteOverlay(asset) {
+        if (asset && asset.overlay) {
+            asset.overlay.style.display = "none";
+        }
+    }
+
+    // Player & hazard sprite assets
+    const spiderIdleAsset = createSpriteAsset(
+        "images/dante.gif",
+        "spiderGifOverlay",
+        "Spider sprite failed to load; using fallback box."
+    );
+    const spiderWalkAsset = createSpriteAsset(
+        "images/dante_walk.gif",
+        "spiderWalkGifOverlay",
+        "Spider walk sprite failed to load; using idle spider sprite."
+    );
+    const spiderChargeAsset = createSpriteAsset(
+        "images/dante_charge.gif",
+        "spiderChargeGifOverlay",
+        "Spider charge sprite failed to load; using idle spider sprite."
+    );
+    const allPlayerAssets = [spiderIdleAsset, spiderChargeAsset, spiderWalkAsset];
 
     // ==========================================
     // RAINDROPLET SPRITE SETUP
     // ==========================================
     const raindropSprite = new Image();
     let raindropSpriteLoaded = false;
-
+    
     raindropSprite.onload = function() {
         raindropSpriteLoaded = true;
     };
@@ -839,6 +881,106 @@
         setSuperJumpHoldInput(true);
     });
 
+    // ==========================================
+    // PLAYER SPRITE RENDER FUNCTION
+    // ==========================================
+    let wasGroundedChargingSuperJump = false;
+    let wasWalking = false;
+
+    function selectActivePlayerAsset() {
+        const isGroundedChargingSuperJump =
+            keys.superJumpHeld && !player.isSuperJumping && player.grounded;
+
+        if (isGroundedChargingSuperJump && isSpriteReady(spiderChargeAsset)) {
+            return spiderChargeAsset;
+        }
+
+        const isMovingHorizontally =
+            !isGroundedChargingSuperJump &&
+            (keys.left || keys.right || Math.abs(player.velocityX) > 0);
+
+        if (isMovingHorizontally && isSpriteReady(spiderWalkAsset)) {
+            return spiderWalkAsset;
+        }
+
+        if (isSpriteReady(spiderIdleAsset)) {
+            return spiderIdleAsset;
+        }
+        return null;
+    }
+    function drawPlayerSprite() {
+        const isGroundedChargingSuperJump =
+            gameState !== "gameover" &&
+            keys.superJumpHeld &&
+            !player.isSuperJumping &&
+            player.grounded;
+
+        const isWalking =
+            gameState !== "gameover" &&
+            !isGroundedChargingSuperJump &&
+            (keys.left || keys.right || Math.abs(player.velocityX) > 0);
+
+        if (isGroundedChargingSuperJump && !wasGroundedChargingSuperJump) {
+            restartGifOverlay(spiderChargeAsset);
+        } else if (!isGroundedChargingSuperJump && wasGroundedChargingSuperJump) {
+            hideSpriteOverlay(spiderChargeAsset);
+        }
+        wasGroundedChargingSuperJump = isGroundedChargingSuperJump;
+
+        if (isWalking && !wasWalking) {
+            restartGifOverlay(spiderWalkAsset);
+        } else if (!isWalking && wasWalking) {
+            hideSpriteOverlay(spiderWalkAsset);
+        }
+        wasWalking = isWalking;
+        
+        const activeAsset = gameState !== "gameover" ? selectActivePlayerAsset() : null;
+        const hitboxCenterX = gameLeft + player.x + player.width / 2;
+        const hitboxBottomY = player.y - cameraY + player.height;
+
+        for (const asset of allPlayerAssets) {
+            if (asset !== activeAsset) {
+                hideSpriteOverlay(asset);
+            }
+        }
+
+        if (gameState === "gameover") {
+            wasGroundedChargingSuperJump = false;
+            return;
+        }
+
+        if (activeAsset && activeAsset.overlay) {
+            const aspectRatio = activeAsset.image.naturalWidth / activeAsset.image.naturalHeight;
+            const drawHeight = player.height * player.spriteScale;
+            const drawWidth = drawHeight * aspectRatio;
+            const drawTopY = hitboxBottomY - drawHeight;
+            const drawLeftX = hitboxCenterX - drawWidth / 2;
+            const canvasRect = canvas.getBoundingClientRect();
+
+            activeAsset.overlay.style.display = "block";
+            activeAsset.overlay.style.left = `${canvasRect.left + drawLeftX}px`;
+            activeAsset.overlay.style.top = `${canvasRect.top + drawTopY}px`;
+            activeAsset.overlay.style.width = `${drawWidth}px`;
+            activeAsset.overlay.style.height = `${drawHeight}px`;
+            activeAsset.overlay.style.transform = player.facing === -1 ? "scaleX(-1)" : "scaleX(1)";
+        } else {
+            ctx.fillStyle = "#2b6cff";
+            ctx.fillRect(
+                gameLeft + player.x,
+                player.y - cameraY,
+                player.width,
+                player.height
+            );
+        }
+    }
+    function restartGifOverlay(asset) {
+        if (!asset || !asset.overlay) return;
+        const baseSrc = asset.image.src;
+        // Reset src briefly so the browser restarts the GIF animation from frame 1
+        asset.overlay.src = "";
+        asset.overlay.src = baseSrc;
+    }
+
     //draw
     function draw() {
         ctx.fillStyle = "#ffffffff"; //background 
@@ -895,42 +1037,8 @@
         }
 
         // player (spider sprite with fallback box)
-        const hitboxCenterX = gameLeft + player.x + player.width / 2;
-        const hitboxBottomY = player.y - cameraY + player.height;
-
-        if (spiderSpriteLoaded && spiderSprite.naturalWidth > 0 && spiderSprite.naturalHeight > 0) {
-            const aspectRatio = spiderSprite.naturalWidth / spiderSprite.naturalHeight;
-            // Base visual height around player.height, scaled cleanly with natural proportions
-            const drawHeight = player.height * player.spriteScale;
-            const drawWidth = drawHeight * aspectRatio;
-
-            // Align spider feet to hitbox bottom so it rests cleanly on platforms
-            const drawTopY = hitboxBottomY - drawHeight;
-
-            ctx.save();
-            ctx.imageSmoothingEnabled = false; // crisp pixel art if your spider is pixel art
-            ctx.translate(hitboxCenterX, drawTopY + drawHeight / 2);
-            if (player.facing === -1) {
-                ctx.scale(-1, 1);
-            }
-            ctx.drawImage(
-                spiderSprite,
-                -drawWidth / 2,
-                -drawHeight / 2,
-                drawWidth,
-                drawHeight
-            );
-            ctx.restore();
-        } else {
-            ctx.fillStyle = "#2b6cff";
-            ctx.fillRect(
-                gameLeft + player.x,
-                player.y - cameraY,
-                player.width,
-                player.height
-            );
-        }
-
+        drawPlayerSprite();
+        
         // raindrops (sprite with fallback circle)
         for (let r of rocks) {
             const dropCenterX = gameLeft + r.x;
