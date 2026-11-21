@@ -8,10 +8,18 @@
     }
 
     if ($_SERVER['REQUEST_METHOD'] == "POST"){
-        $user_key = implode(" ", $_POST['disable_user']);
-        $_SESSION['user_key'] = $user_key;
+        $_SESSION['user_key'] = $_POST['change_status'];
         header("Location: disable.php");
+        exit();
     }
+
+    $query = 'SELECT s.user_name, s.high_score, s.height_reached, u.status
+             FROM scores as s
+             LEFT JOIN user_details as u ON s.user_name = u.user_name
+             ORDER BY s.high_score DESC
+             ';
+    $results = pg_query($conn, $query);
+    $user = pg_fetch_all($results) ?: [];
 ?>
 
 
@@ -44,17 +52,18 @@
                 </tr>
 
                     <?php
-                        $results = pg_query($conn, 'SELECT * FROM scores ORDER BY high_score DESC');
-                        $user = pg_fetch_all($results);
-
                         foreach($user as $u): 
-                            $uname = htmlspecialchars($u['user_name'], ENT_QUOTES, 'UTF-8');?>
+                            $uname = htmlspecialchars($u['user_name'], ENT_QUOTES, 'UTF-8');
+                            $is_disabled = ($u['status'] === 'disabled');
+                            $btn_label = $is_disabled ? 'Enable' : 'Disable';
+                            $btn_class = $is_disabled ? 'btn-success' : 'btn-secondary';
+                    ?>
                             
                         <tr>
                             <td><?php echo $uname ?></td>
                             <td><?php echo $u['high_score'] ?> </td>
                             <td><?php echo $u['height_reached'] ?> </td>
-                            <td> <button type="submit" name="disable_user" value="<? $uname ?>" class="btn btn-secondary">Disable</button> </td>
+                            <td> <button id="btn" type="submit" name="change_status" value="<?php echo $uname ?>" class="btn <?php echo $btn_class; ?>"><?php echo $btn_label ?></button> </td>
                         </tr>
                     <?php endforeach; ?>                    
             </table>
@@ -63,7 +72,6 @@
         <br><br>
         <a href="logout.php">Exit</a>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 </body>
 </html>

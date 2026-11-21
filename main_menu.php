@@ -22,7 +22,9 @@
 
         <p>
             <a href="main_game.php">Play</a> | 
+            <a href="scoreboard.php">Scoreboard</a> | 
             <a href="logout.php">Logout</a>
+            
             <!-- ^^ Change to PNG buttons -->
         </p>
     </div>

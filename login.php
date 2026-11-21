@@ -10,21 +10,27 @@
         $result = pg_query_params($conn, 'SELECT * FROM user_details WHERE user_name = $1', [$username]);
         $user = pg_fetch_assoc($result);
 
-        if ($user){
-            if ($user && password_verify($password, $user['password'])){
+
+        if ($user && password_verify($password, $user['password'])){
+            if ($user['status'] == 'disabled'){
+                $errors[] = "Sorry, your account has been disabled";
+            } else {
                 $_SESSION['username'] = $user['user_name'];
                 if ($user['admin'] == 1){
                     $_SESSION['admin_access'] = $user['admin'];
                     header("Location: admin_view.php");
                     exit;
                 } 
+                
                 header("Location: main_menu.php");
                 exit;
-            } else {
-            $errors[] = "Invalid Credentials";
             }
-        } 
-    }
+        } elseif (!$user) {
+            $errors[] = "User not found. Please register";
+        } else {
+            $errors[] = "Invalid Credentials";
+        }
+    } 
 ?>
 
 <!DOCTYPE html>
@@ -52,19 +58,19 @@
                 <label for="exampleInputPassword1">Password</label>
                 <input type="password" class="form-control" placeholder="Password" name="password" required>
             </div>
+            <?php 
+            foreach($errors as $error){
+                echo "<p style='color: #e0682b;'>" . $error;
+            }
+            ?>
             <br><br>
             <button type="submit" class="btn btn-secondary">Login</button>
             <br><br>
             <p>Don't have an account yet? Register <a href="register.php">here!</a></p>
         </form>
-        </div>
 
-<!-- DISPLAYING ERRORS ==================================================== -->
-    <?php 
-        foreach($errors as $error){
-            echo $error . "<br>";
-        }
-    ?>
+    
+        </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 </body>
 </html>
