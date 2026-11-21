@@ -37,8 +37,9 @@
 <img id="spiderWalkGifOverlay" src="images/dante_walk.gif" alt="Dante Walking" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
 
 <script>
-
-    //canvas
+    // ==========================================
+    // CANVAS & SESSION STATE
+    // ==========================================
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -933,7 +934,7 @@
             hideSpriteOverlay(spiderWalkAsset);
         }
         wasWalking = isWalking;
-        
+
         const activeAsset = gameState !== "gameover" ? selectActivePlayerAsset() : null;
         const hitboxCenterX = gameLeft + player.x + player.width / 2;
         const hitboxBottomY = player.y - cameraY + player.height;
