@@ -21,11 +21,15 @@
         </div>
 
         <p>
-            <a href="main_game.php">Play</a> | 
+            <a href="main_game_End.php">Play</a> | 
             <a href="scoreboard.php">Scoreboard</a> | 
             <a href="logout.php">Logout</a>
             
             <!-- ^^ Change to PNG buttons -->
+        </p>
+
+        <p>
+            <a href="main_game_endless.php"><h2>Endless Mode!!</h2></a>
         </p>
     </div>
 </body>
