@@ -102,6 +102,93 @@
     }
 //#endregion
 
+//#region Audio System
+    // ==========================================
+    // AUDIO SYSTEM (BGM, PAUSE/GAMEOVER SYNC & AUTOPLAY UNLOCK)
+    // ==========================================
+    const AudioSystem = {
+        bgmSrc: "images/game_bgm.mp3", // <-- replace with your music file path
+        gameOverSrc: "",                  // <-- optional: e.g. "audio/gameover.mp3"
+        bgm: null,
+        gameOverSfx: null,
+        volume: 0.45,
+        muted: false,
+        unlocked: false,
+
+        init() {
+            this.bgm = new Audio(this.bgmSrc);
+            this.bgm.loop = true;
+            this.bgm.volume = this.muted ? 0 : this.volume;
+            this.bgm.preload = "auto";
+
+            if (this.gameOverSrc) {
+                this.gameOverSfx = new Audio(this.gameOverSrc);
+                this.gameOverSfx.loop = false;
+                this.gameOverSfx.volume = this.muted ? 0 : Math.min(1, this.volume * 1.1);
+                this.gameOverSfx.preload = "auto";
+            }
+        },
+
+        unlockAndSync(currentGameState) {
+            this.unlocked = true;
+            if (currentGameState === "playing") {
+                this.playBgm();
+            }
+        },
+
+        playBgm() {
+            if (!this.bgm || this.muted) return;
+            const playPromise = this.bgm.play();
+            if (playPromise && typeof playPromise.catch === "function") {
+                playPromise.catch(() => {
+                    // Autoplay blocked until the user interacts with the page
+                });
+            }
+        },
+
+        pauseBgm() {
+            if (!this.bgm) return;
+            this.bgm.pause();
+        },
+
+        stopAndRewindBgm() {
+            if (!this.bgm) return;
+            this.bgm.pause();
+            this.bgm.currentTime = 0;
+        },
+
+        playGameOver() {
+            this.stopAndRewindBgm();
+            if (!this.gameOverSfx || this.muted) return;
+            this.gameOverSfx.currentTime = 0;
+            const playPromise = this.gameOverSfx.play();
+            if (playPromise && typeof playPromise.catch === "function") {
+                playPromise.catch(() => {});
+            }
+        },
+
+        setMuted(muteState) {
+            this.muted = Boolean(muteState);
+            if (this.bgm) {
+                this.bgm.volume = this.muted ? 0 : this.volume;
+            }
+            if (this.gameOverSfx) {
+                this.gameOverSfx.volume = this.muted ? 0 : Math.min(1, this.volume * 1.1);
+            }
+            if (this.muted) {
+                this.pauseBgm();
+            } else if (this.unlocked && gameState === "playing") {
+                this.playBgm();
+            }
+        },
+
+        toggleMute() {
+            this.setMuted(!this.muted);
+        }
+    };
+    AudioSystem.init();
+//#endregion
+
 //#region Player System
     // ==========================================
     // PLAYER SYSTEM (STATE, INPUTS, PHYSICS & VISUALS)
@@ -145,7 +232,10 @@
             superJumpPowerScale: Math.SQRT2,
             superJumpChargeMs: 0,
             superJumpChargeRequiredMs: 1500,
+            superJumpHungerCost: 3,
             isSuperJumping: false,
+            noHungerPromptTimerMs: 0,
+            noHungerPromptDurationMs: 1100,
 
             // Knockback, stun, hitstop & post-hit invulnerability
             knockbackSpeedX: 2.5,
@@ -245,6 +335,9 @@
             }
             if (p.invulnTimerMs > 0) {
                 p.invulnTimerMs = Math.max(0, p.invulnTimerMs - frameMs);
+            }
+            if (p.noHungerPromptTimerMs > 0) {
+                p.noHungerPromptTimerMs = Math.max(0, p.noHungerPromptTimerMs - frameMs);
             }
         },
         triggerHitstop() {
@@ -435,7 +528,11 @@
 
         updateHorizontalMovement(dt) {
             const p = this.state;
-            const isChargingSuperJump = this.keys.superJumpHeld && !p.isSuperJumping;
+            const hasEnoughHungerForSuperJump = TerrainSystem.foodProgress >= p.superJumpHungerCost;
+            const isChargingSuperJump =
+                this.keys.superJumpHeld &&
+                !p.isSuperJumping &&
+                hasEnoughHungerForSuperJump;
 
             // Lock horizontal control during 0.25s hit-stun while preserving knockback drift
             if (p.hurtStunTimerMs > 0) {
@@ -467,23 +564,35 @@
         updateVerticalMotion(dt) {
             const p = this.state;
             const frameMs = dt * (1000 / 60);
-            const isChargingSuperJump = this.keys.superJumpHeld && !p.isSuperJumping;
+            const hasEnoughHungerForSuperJump = TerrainSystem.foodProgress >= p.superJumpHungerCost;
+            const isChargingSuperJump =
+                this.keys.superJumpHeld &&
+                !p.isSuperJumping &&
+                hasEnoughHungerForSuperJump;
 
-            // Charge Super Jump while Click is held; releasing early resets charge to 0
+            // Charge Super Jump while Click is held (and player has >= 3 hunger); releasing early resets charge
             if (isChargingSuperJump) {
                 p.superJumpChargeMs += frameMs;
+                p.noHungerPromptTimerMs = 0;
 
                 if (p.superJumpChargeMs >= p.superJumpChargeRequiredMs) {
-                    p.superJumpChargeMs = 0;
-                    p.isSuperJumping = true;
-                    p.grounded = false;
-                    p.canExtendJump = false;
-                    p.ignorePlatform = null;
-                    p.dropThroughTimer = 0;
-                    p.velocityY = -(p.jumpPower * p.superJumpPowerScale);
+                    if (TerrainSystem.consumeHunger(p.superJumpHungerCost)) {
+                        p.superJumpChargeMs = 0;
+                        p.isSuperJumping = true;
+                        p.grounded = false;
+                        p.canExtendJump = false;
+                        p.ignorePlatform = null;
+                        p.dropThroughTimer = 0;
+                        p.velocityY = -(p.jumpPower * p.superJumpPowerScale);
+                    } else {
+                        p.superJumpChargeMs = 0;
+                    }
                 }
             } else {
                 p.superJumpChargeMs = 0;
+                if (this.keys.superJumpHeld && !p.isSuperJumping && !hasEnoughHungerForSuperJump) {
+                    p.noHungerPromptTimerMs = p.noHungerPromptDurationMs;
+                }
             }
 
             // Regular jump (blocked while stunned, charging, or mid-super-jump)
@@ -631,7 +740,12 @@
 
         selectActiveAsset() {
             const p = this.state;
-            const isGroundedCharging = this.keys.superJumpHeld && !p.isSuperJumping && p.grounded;
+            const hasEnoughHungerForSuperJump = TerrainSystem.foodProgress >= p.superJumpHungerCost;
+            const isGroundedCharging =
+                this.keys.superJumpHeld &&
+                !p.isSuperJumping &&
+                p.grounded &&
+                hasEnoughHungerForSuperJump;
             if (isGroundedCharging && isSpriteReady(this.assets.charge)) {
                 return this.assets.charge;
             }
@@ -649,10 +763,17 @@
 
         drawSprite(context, cameraY, isGameOver) {
             const p = this.state;
+            const hasEnoughHungerForSuperJump = TerrainSystem.foodProgress >= p.superJumpHungerCost;
             const isGroundedCharging =
-                !isGameOver && this.keys.superJumpHeld && !p.isSuperJumping && p.grounded;
+                !isGameOver &&
+                this.keys.superJumpHeld &&
+                !p.isSuperJumping &&
+                p.grounded &&
+                hasEnoughHungerForSuperJump;
             const isWalking =
-                !isGameOver && !isGroundedCharging && (this.keys.left || this.keys.right || Math.abs(p.velocityX) > 0);
+                !isGameOver &&
+                !isGroundedCharging &&
+                (this.keys.left || this.keys.right || Math.abs(p.velocityX) > 0);
 
             if (isGroundedCharging && !this.assets.wasGroundedCharging) {
                 restartGifOverlay(this.assets.charge);
@@ -726,6 +847,23 @@
                 context.fillRect(barX, barY, barWidth, barHeight);
                 context.fillStyle = "#22c55e";
                 context.fillRect(barX, barY, barWidth * chargeRatio, barHeight);
+            }
+            if (p.noHungerPromptTimerMs > 0) {
+                const promptX = gameLeft + p.x + p.width / 2;
+                const promptY = p.y - cameraY - 18;
+
+                context.save();
+                context.font = "bold 13px 'Courier New', Courier, monospace";
+                context.textAlign = "center";
+                context.textBaseline = "bottom";
+
+                context.lineWidth = 3;
+                context.strokeStyle = "rgba(15, 23, 42, 0.9)";
+                context.strokeText("I'm too hungry to do a Super Jump", promptX, promptY);
+
+                context.fillStyle = "#fde047";
+                context.fillText("I'm too hungry to do a Super Jump", promptX, promptY);
+                context.restore();
             }
         },
 
@@ -824,6 +962,10 @@
 
         platformWidth: 120,
         platformHeight: 20,
+        minPlatformStepY: 65,
+        maxPlatformStepY: 115,        // comfortably below max regular jump height (~140-165px)
+        maxPlatformStepX: 240,
+
         crumblyChance: 0.28,           // chance a generated platform is crumbly (after initial safe platform)
         crumblyBreakDurationMs: 1500,   // time from first player contact until platform breaks
         crumblyMaxShakePx: 6,          // max horizontal shake offset right before breaking
@@ -880,9 +1022,26 @@
             });
         },
 
-        updateCoins(playerState) {
-            const foodRequired = playerState.foodToLives || 25;
+        consumeHunger(amount) {
+            if (this.foodProgress < amount) return false;
+            this.foodProgress -= amount;
+            return true;
+        },
+
+        convertFullHungerToLife(playerState) {
+            const foodRequired = playerState.foodToLives || 15;
             const maxLivesCap = playerState.maxLives || 3;
+
+            if (this.foodProgress < foodRequired) return false;
+            if (this.lives >= maxLivesCap) return false;
+
+            this.foodProgress -= foodRequired;
+            this.lives = Math.min(maxLivesCap, this.lives + 1);
+            return true;
+        },
+
+        updateCoins(playerState) {
+            const foodRequired = playerState.foodToLives || 15;
 
             this.coins = this.coins.filter((c) => {
                 let nx = Math.max(playerState.x, Math.min(c.x, playerState.x + playerState.width));
@@ -898,16 +1057,9 @@
                         } catch (e) {}
                     }
 
-                    // Endless Mode: convert every 25 food/coins into +1 life (never exceeding maxLives)
-                    if (this.lives < maxLivesCap) {
-                        this.foodProgress++;
-                        if (this.foodProgress >= foodRequired) {
-                            this.foodProgress -= foodRequired;
-                            this.lives = Math.min(maxLivesCap, this.lives + 1);
-                        }
-                    } else {
-                        // Already at full health: keep progress at 0 so a full bar isn't banked while at max lives
-                        this.foodProgress = 0;
+                    // Fill hunger bar up to full; player presses Right-Click when full to convert into +1 life
+                    if (this.foodProgress < foodRequired) {
+                        this.foodProgress = Math.min(foodRequired, this.foodProgress + 1);
                     }
 
                     return false;
@@ -951,13 +1103,28 @@
             let highest = this.platforms.reduce(function(a, b) {
                 return a.y < b.y ? a : b;
             });
+
             while (highest.y > this.cameraY - 200) {
-                highest = this.createPlatformObject(
-                    Math.random() * (gameWidth - this.platformWidth),
-                    highest.y - (80 + Math.random() * 70),
-                    false
+                const stepY =
+                    this.minPlatformStepY +
+                    Math.random() * (this.maxPlatformStepY - this.minPlatformStepY);
+                const nextY = highest.y - stepY;
+
+                const prevCenterX = highest.x + highest.width / 2;
+                const minAllowedX = Math.max(
+                    0,
+                    Math.min(gameWidth - this.platformWidth, prevCenterX - this.maxPlatformStepX - this.platformWidth / 2)
                 );
+                const maxAllowedX = Math.max(
+                    minAllowedX,
+                    Math.min(gameWidth - this.platformWidth, prevCenterX + this.maxPlatformStepX - this.platformWidth / 2)
+                );
+
+                const nextX = minAllowedX + Math.random() * (maxAllowedX - minAllowedX);
+
+                highest = this.createPlatformObject(nextX, nextY, false);
                 this.platforms.push(highest);
+
                 if (Math.random() < this.coinChance) {
                     this.createCoin(highest);
                 }
@@ -1312,6 +1479,11 @@
         const spawnY = canvas.height - 150;
         PlayerSystem.resetState(spawnX, spawnY);
         TerrainSystem.resetRunState(PlayerSystem.state, true);
+
+        AudioSystem.stopAndRewindBgm();
+        if (AudioSystem.unlocked) {
+            AudioSystem.playBgm();
+        }
     }
     function resetGame() {
         PlayerSystem.clearAllInputs();
@@ -1350,17 +1522,22 @@
         if (gameState !== "playing") return;
         PlayerSystem.clearAllInputs();
         gameState = "paused";
+        AudioSystem.pauseBgm();
     }
+
     function resumeGame() {
         if (gameState !== "paused") return;
         PlayerSystem.clearAllInputs();
         lastTime = performance.now();
         gameState = "playing";
+        AudioSystem.playBgm();
     }
+
     function triggerGameOver() {
         PlayerSystem.clearAllInputs();
         TerrainSystem.lives = 0;
         gameState = "gameover";
+        AudioSystem.playGameOver();
 
         if (TerrainSystem.newRecord) {
             fetch('saveScore.php', {
@@ -1386,25 +1563,73 @@
     }
 
     // Input & UI Event Listeners
+    canvas.addEventListener("contextmenu", function(event) {
+        event.preventDefault();
+    });
     document.addEventListener("keydown", function(event) {
+        AudioSystem.unlockAndSync(gameState);
+
+        if (event.key.toLowerCase() === "m") {
+            AudioSystem.toggleMute();
+            return;
+        }
+
+        if (event.key === "Escape" || event.key.toLowerCase() === "p") {
+            if (gameState === "playing") {
+                pauseGame();
+                return;
+            } else if (gameState === "paused") {
+                resumeGame();
+                return;
+            }
+        }
+
+        if (gameState !== "playing") return;
         PlayerSystem.handleKeyInput(event, true);
     });
     document.addEventListener("keyup", function(event) {
         PlayerSystem.handleKeyInput(event, false);
     });
     canvas.addEventListener("pointerdown", function(event) {
-        if (event.button !== 0) return;
+        AudioSystem.unlockAndSync(gameState);
+
+        const rect = canvas.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const clickY = event.clientY - rect.top;
+
+        if (gameState === "paused") {
+            if (event.button !== 0) return;
+            if (isPointInRect(clickX, clickY, pauseButtons.resume)) {
+                resumeGame();
+            } else if (isPointInRect(clickX, clickY, pauseButtons.restart)) {
+                startFreshRun();
+            } else if (isPointInRect(clickX, clickY, pauseButtons.mainMenu)) {
+                window.location.href = "main_menu.php";
+            }
+            return;
+        }
 
         if (gameState === "gameover") {
-            const rect = canvas.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
-
+            if (event.button !== 0) return;
             if (isPointInRect(clickX, clickY, gameOverButtons.retry)) {
                 startFreshRun();
             } else if (isPointInRect(clickX, clickY, gameOverButtons.mainMenu)) {
                 window.location.href = "main_menu.php";
             }
+            return;
+        }
+
+        // Right-click converts full hunger bar into +1 life
+        if (event.button === 2) {
+            TerrainSystem.convertFullHungerToLife(PlayerSystem.state);
+            return;
+        }
+
+        if (event.button !== 0) return;
+
+        // Check sidebar Pause button before starting super-jump charge
+        if (isPointInRect(clickX, clickY, pauseButton)) {
+            pauseGame();
             return;
         }
 
@@ -1489,11 +1714,16 @@
         ctx.fillText("Height: " + TerrainSystem.score, rightSidebarX, 92);
 
         // Endless mode food-to-life meter
-        const foodRequired = PlayerSystem.state.foodToLives || 25;
+        const foodRequired = PlayerSystem.state.foodToLives || 15;
+        const hungerFull = TerrainSystem.foodProgress >= foodRequired;
         const atMaxLives = TerrainSystem.lives >= PlayerSystem.state.maxLives;
-        const meterLabel = atMaxLives
-            ? "Hunger: Not Hungry"
-            : `Hunger: ${TerrainSystem.foodProgress}/${foodRequired}`;
+
+        let meterLabel = `Hunger: ${TerrainSystem.foodProgress}/${foodRequired}`;
+        if (hungerFull && !atMaxLives) {
+            meterLabel = "Hunger: FULL [RMB for +1 Life]";
+        } else if (hungerFull && atMaxLives) {
+            meterLabel = "Hunger: FULL (Max Lives)";
+        }
 
         ctx.font = "bold 16px 'Courier New', Courier, monospace";
         ctx.fillText(meterLabel, rightSidebarX, 122);
@@ -1501,11 +1731,11 @@
         const barWidth = 170;
         const barHeight = 10;
         const barY = 132;
-        const ratio = atMaxLives ? 1 : Math.min(1, TerrainSystem.foodProgress / foodRequired);
+        const ratio = Math.min(1, TerrainSystem.foodProgress / foodRequired);
 
         ctx.fillStyle = "#334155";
         ctx.fillRect(rightSidebarX, barY, barWidth, barHeight);
-        ctx.fillStyle = atMaxLives ? "#eab308" : "#22c55e";
+        ctx.fillStyle = hungerFull ? "#eab308" : "#22c55e";
         ctx.fillRect(rightSidebarX, barY, barWidth * ratio, barHeight);
 
         // Pause button in the right sidebar while playing
