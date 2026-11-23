@@ -1,5 +1,5 @@
 <?php
-    include('db.php');
+    require_once __DIR__ . '/../config/db.php';
     session_start();
 
 
@@ -11,5 +11,5 @@
     $new_status = ($db_status['status'] === 'active') ? 'disabled' : 'active';
     $set_status = pg_query_params($conn, 'UPDATE user_details SET status = $1 WHERE user_name = $2', [$new_status, $key]);
 
-    header('Location: admin_view.php');
+    header('Location: ../admin/admin_view.php');
 ?>

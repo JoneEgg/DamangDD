@@ -1,6 +1,6 @@
 <?php
     session_start();
-    include('db.php');
+    require_once __DIR__ .'/../config/db.php';
     $errors = [];
 
     if ($_SERVER["REQUEST_METHOD"] == "POST"){
@@ -18,11 +18,11 @@
                 $_SESSION['username'] = $user['user_name'];
                 if ($user['admin'] == 1){
                     $_SESSION['admin_access'] = $user['admin'];
-                    header("Location: admin_view.php");
+                    header("Location: ../admin/admin_view.php");
                     exit;
                 } 
                 
-                header("Location: main_menu.php");
+                header("Location: ../game/main_menu.php");
                 exit;
             }
         } elseif (!$user) {
@@ -38,14 +38,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <title>Login</title>
 </head>
 <body id="form_body">
     <div id="container">
         <div id="banner">
-            <img id="logo_img" src="./images/DDD_logo.png" alt="Damang, Don't Drown! Logo">
+            <img id="logo_img" src="../assets/images/DDD_logo.png" alt="Damang, Don't Drown! Logo">
         </div>
         
         <form method="POST">
@@ -66,7 +66,7 @@
             <br><br>
             <button type="submit" class="btn btn-secondary">Login</button>
             <br><br>
-            <p>Don't have an account yet? Register <a href="register.php">here!</a></p>
+            <p>Don't have an account yet? Register <a href="../auth/register.php">here!</a></p>
         </form>
 
     

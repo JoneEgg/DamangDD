@@ -1,8 +1,8 @@
 <?php 
-    include('db.php');
+    require_once __DIR__ . '/../config/db.php';
     session_start();
     if(!isset($_SESSION['username'])){
-        header("Location: login.php");
+        header("Location: ../auth/login.php");
         exit();
     }
 
@@ -26,15 +26,15 @@
 
     <meta charset="UTF-8">
     <title>Damang, Don't Drown!</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
 </style>
 </head>
 <body id="main_body">
 <canvas id="gameCanvas"></canvas>
-<img id="spiderGifOverlay" src="images/dante.gif" alt="Dante" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
-<img id="spiderChargeGifOverlay" src="images/dante_charge.gif" alt="Dante Charging" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
-<img id="spiderWalkGifOverlay" src="images/dante_walk.gif" alt="Dante Walking" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+<img id="spiderGifOverlay" src="../assets/images/dante.gif" alt="Dante" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+<img id="spiderChargeGifOverlay" src="../assets/images/dante_charge.gif" alt="Dante Charging" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+<img id="spiderWalkGifOverlay" src="../assets/images/dante_walk.gif" alt="Dante Walking" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
 
 <script>
 //#region Canvas and Session State
@@ -107,7 +107,7 @@
     // AUDIO SYSTEM (BGM, PAUSE/GAMEOVER SYNC & AUTOPLAY UNLOCK)
     // ==========================================
     const AudioSystem = {
-        bgmSrc: "images/game_bgm.mp3", // <-- replace with your music file path
+        bgmSrc: "../assets/images/game_bgm.mp3", // <-- replace with your music file path
         gameOverSrc: "",                  // <-- optional: e.g. "audio/gameover.mp3"
         bgm: null,
         gameOverSfx: null,
@@ -296,17 +296,17 @@
 
         assets: {
             idle: createSpriteAsset(
-                "images/dante.gif",
+                "../assets/images/dante.gif",
                 "spiderGifOverlay",
                 "Spider sprite failed to load; using fallback box."
             ),
             walk: createSpriteAsset(
-                "images/dante_walk.gif",
+                "../assets/images/dante_walk.gif",
                 "spiderWalkGifOverlay",
                 "Spider walk sprite failed to load; using idle spider sprite."
             ),
             charge: createSpriteAsset(
-                "images/dante_charge.gif",
+                "../assets/images/dante_charge.gif",
                 "spiderChargeGifOverlay",
                 "Spider charge sprite failed to load; using idle spider sprite."
             ),
@@ -987,7 +987,7 @@
                 spriteObj.loaded = false;
                 console.warn("Raindrop sprite failed to load; using fallback circle.");
             };
-            img.src = "images/rain.png";
+            img.src = "../assets/images/rain.png";
             return spriteObj;
         })(),
 

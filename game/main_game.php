@@ -1,8 +1,8 @@
 <?php 
-    include('db.php');
+    require_once __DIR__ . '/../config/db.php';
     session_start();
     if(!isset($_SESSION['username'])){
-        header("Location: login.php");
+        header("Location: ../auth/login.php");
         exit();
     }
 
@@ -26,15 +26,15 @@
 
     <meta charset="UTF-8">
     <title>Damang, Don't Drown!</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
 </style>
 </head>
 <body id="main_body">
 <canvas id="gameCanvas"></canvas>
-<img id="spiderGifOverlay" src="images/dante.gif" alt="Dante" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
-<img id="spiderChargeGifOverlay" src="images/dante_charge.gif" alt="Dante Charging" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
-<img id="spiderWalkGifOverlay" src="images/dante_walk.gif" alt="Dante Walking" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+<img id="spiderGifOverlay" src="../assets/images/dante.gif" alt="Dante" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+<img id="spiderChargeGifOverlay" src="../assets/images/dante_charge.gif" alt="Dante Charging" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+<img id="spiderWalkGifOverlay" src="../assets/images/dante_walk.gif" alt="Dante Walking" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
 
 <script>
     // ==========================================
@@ -93,17 +93,17 @@
 
     // Player & hazard sprite assets
     const spiderIdleAsset = createSpriteAsset(
-        "images/dante.gif",
+        "../assets/images/dante.gif",
         "spiderGifOverlay",
         "Spider sprite failed to load; using fallback box."
     );
     const spiderWalkAsset = createSpriteAsset(
-        "images/dante_walk.gif",
+        "../assets/images/dante_walk.gif",
         "spiderWalkGifOverlay",
         "Spider walk sprite failed to load; using idle spider sprite."
     );
     const spiderChargeAsset = createSpriteAsset(
-        "images/dante_charge.gif",
+        "../assets/images/dante_charge.gif",
         "spiderChargeGifOverlay",
         "Spider charge sprite failed to load; using idle spider sprite."
     );
@@ -124,7 +124,7 @@
     };
 
     // Update this path to match your raindroplet sprite file
-    raindropSprite.src = "images/rain.png";
+    raindropSprite.src = "../assets/images/rain.png";
     const raindropSpriteScale = 5; // visual scale multiplier relative to r.size
 
     //Play Attributes
