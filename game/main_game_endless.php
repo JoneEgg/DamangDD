@@ -2390,7 +2390,7 @@
         AudioSystem.playGameOver();
 
         if (TerrainSystem.newRecord) {
-            fetch('saveScore.php', {
+            fetch('../config/save_score.php', {
                 method: 'POST',
                 body: new URLSearchParams({
                     bestFoods: TerrainSystem.bestFoods,

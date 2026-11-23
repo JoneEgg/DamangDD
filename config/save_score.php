@@ -8,7 +8,7 @@
     }
 
     $username = $_SESSION['username'];
-    $high_score = (int)($_POST['bestCoins']);
+    $high_score = (int)($_POST['bestFoods']);
     $height_reached = (int)($_POST['bestScore']);
 
         // FOR ENDLESS SCORES
