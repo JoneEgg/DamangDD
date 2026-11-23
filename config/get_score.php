@@ -8,7 +8,7 @@ session_start();
     }
 
 $query = 'SELECT s.user_name, s.high_score, s.height_reached, u.status
-             FROM endless_scores as s
+             FROM scores as s
              LEFT JOIN user_details as u ON s.user_name = u.user_name
              ORDER BY s.high_score DESC
              ';

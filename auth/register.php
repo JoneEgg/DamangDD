@@ -93,6 +93,12 @@
                 <input type="checkbox" class="form-check-input" name="admin_access" value="<?php echo isset($_POST['admin_access']) ? 'checked' : ''; ?>">
             </label>
             </div>
+<!-- DISPLAYING ERRORS ==================================================== -->
+            <?php 
+                foreach($errors as $error){
+                    echo $error . "<br>";
+                }
+            ?>
             <br><br>
             <button type="submit" class="btn btn-secondary">Register</button> 
             <br><br>
@@ -101,12 +107,7 @@
         <br>
     </div>
 
-<!-- DISPLAYING ERRORS ==================================================== -->
-    <?php 
-        foreach($errors as $error){
-            echo $error . "<br>";
-        }
-    ?>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 </body>
 </html>

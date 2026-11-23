@@ -1,4 +1,7 @@
 <?php
+    ini_set('display_errors', 1);
+    error_reporting(E_ALL);
+
     session_start();
     require_once __DIR__ . '/../config/db.php';
 
@@ -9,12 +12,12 @@
 
     if ($_SERVER['REQUEST_METHOD'] == "POST"){
         $_SESSION['user_key'] = $_POST['change_status'];
-        header("Location: ../admin/disable.php");
+        header("Location: disable.php");
         exit();
     }
 
     $query = 'SELECT s.user_name, s.high_score, s.height_reached, u.status
-             FROM scores as s
+             FROM endless_scores as s
              LEFT JOIN user_details as u ON s.user_name = u.user_name
              ORDER BY s.high_score DESC
              ';
@@ -63,7 +66,7 @@
                             <td><?php echo $uname ?></td>
                             <td><?php echo $u['high_score'] ?> </td>
                             <td><?php echo $u['height_reached'] ?> </td>
-                            <td> <button id="btn" type="submit" name="change_status" value="<?php echo $uname ?>" class="btn <?php echo $btn_class; ?>"><?php echo $btn_label ?></button> </td>
+                            <td> <button class="btn-outline theme-secondary" type="submit" name="change_status" value="<?php echo $uname ?>" class="btn <?php echo $btn_class; ?>"><?php echo $btn_label ?></button> </td>
                         </tr>
                     <?php endforeach; ?>                    
             </table>

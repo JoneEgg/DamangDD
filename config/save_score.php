@@ -12,14 +12,12 @@
     $height_reached = (int)($_POST['bestScore']);
 
         // FOR ENDLESS SCORES
-        $insert_sql = 'INSERT INTO endless_scores (user_name, high_score, height_reached) 
+        $insert_sql = 'INSERT INTO scores (user_name, high_score, height_reached) 
             VALUES ($1, $2, $3)
             ON CONFLICT (user_name)
             DO UPDATE SET 
-            high_score = GREATEST(endless_scores.high_score, EXCLUDED.high_score),
-            height_reached = GREATEST(endless_scores.height_reached, EXCLUDED.height_reached)';
-    
-        
+            high_score = GREATEST(scores.high_score, EXCLUDED.high_score),
+            height_reached = GREATEST(scores.height_reached, EXCLUDED.height_reached)';
 
         $sql = pg_query_params($conn, $insert_sql, [$username, $high_score, $height_reached]);
 

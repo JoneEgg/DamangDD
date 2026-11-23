@@ -17,7 +17,7 @@
     //     }
     // }
 
-    $results = pg_query_params($conn, 'SELECT * FROM endless_scores WHERE user_name = $1', [$_SESSION['username']]);
+    $results = pg_query_params($conn, 'SELECT * FROM scores WHERE user_name = $1', [$_SESSION['username']]);
     $hscore = pg_fetch_assoc($results) ?: 0;
 
 ?>
@@ -57,18 +57,6 @@
                 <b><h2>[ <?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?> ]</h2></b> 
                 <br><br>
 
-                <h3><b>NORMAL MODE</b></h3>
-                <br>
-                HIGHEST SCORE
-                <br>
-                <b><h2><?php echo $hscore['high_score'] ?></h2></b> 
-                <br>
-
-                HIGHEST REACHED
-                <br>
-                <b><h2><?php echo $hscore['height_reached'] ?></h2></b> 
-                <br><br>
-
                 <h3><b>ENDLESS MODE</b></h3>
                 <br>
                 HIGHEST SCORE
@@ -80,12 +68,13 @@
                 <br>
                 <b><h2><?php echo $hscore['height_reached'] ?></h2></b> 
                 <br><br>
+
             </p>
         <div id="footer">
 
             <nav class="nav">
-                <a class="nav-link active" aria-current="page" href="../auth/logout.php">Edit Profile</a>
-                <a class="nav-link" href="#">Logout</a>
+                <a class="nav-link active" aria-current="page" href="../auth/edit_profile.php">Edit Profile</a>
+                <a class="nav-link" href="../auth/logout.php">Logout</a>
             </nav>            
 
         </div>
