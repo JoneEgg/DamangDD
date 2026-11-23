@@ -1,19 +1,13 @@
 <?php
     session_start();
     require_once __DIR__ . '/../config/db.php';
+    require_once __DIR__ . '/../config/get_score.php';
 
     if (!isset($_SESSION['username'])){
         header("Location: ../auth/login.php");
         exit();
     }
 
-    $query = 'SELECT s.user_name, s.high_score, s.height_reached, u.status
-             FROM scores as s
-             LEFT JOIN user_details as u ON s.user_name = u.user_name
-             ORDER BY s.high_score DESC
-             ';
-    $results = pg_query($conn, $query);
-    $user = pg_fetch_all($results) ?: [];
 ?>
 
 
@@ -26,8 +20,27 @@
     <link rel="stylesheet" href="../assets/css/styles.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
 </head>
-<body class="form_body">
+<body id="form_body">
     <div id="container">
+
+        <div id="nav_bar">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" aria-current="page" href="../game/main_game.php">Play</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" aria-current="page" href="../game/main_game_endless.php">Play Endless</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="../game/scoreboard.php">Scoreboards</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../game/user_profile.php">Profile</a>
+                </li>
+            </ul>
+        </div>
+
+
         <div id="banner">
             <img id="logo_img" src="../assets/images/DDD_logo.png" alt="Damang, Don't Drown! Logo">
         </div>
@@ -43,7 +56,7 @@
                 </tr>
 
                     <?php
-                        foreach($user as $u): 
+                        foreach($score as $u): 
                             $uname = htmlspecialchars($u['user_name'], ENT_QUOTES, 'UTF-8');
                     ?>
                             
