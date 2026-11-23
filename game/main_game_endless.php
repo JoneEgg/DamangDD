@@ -31,10 +31,12 @@
 </style>
 </head>
 <body id="main_body">
+
 <canvas id="gameCanvas"></canvas>
 <img id="spiderGifOverlay" src="../assets/images/dante.gif" alt="Dante" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
 <img id="spiderChargeGifOverlay" src="../assets/images/dante_charge.gif" alt="Dante Charging" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
 <img id="spiderWalkGifOverlay" src="../assets/images/dante_walk.gif" alt="Dante Walking" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
+
 
 <script>
 //#region Canvas and Session State
@@ -1494,11 +1496,11 @@
             gameState = "gameover";
 
             if (TerrainSystem.newRecord) {
-                fetch('saveScore.php', {
+                fetch('../config/save_score.php', {
                     method: 'POST',
                     body: new URLSearchParams({
                         bestCoins: TerrainSystem.bestCoins,
-                        bestScore: TerrainSystem.bestScore
+                        bestScore: TerrainSystem.bestScore,
                     })
                 })
                 .then(res => {

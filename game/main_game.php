@@ -10,7 +10,7 @@
         $high_score = 0;
         $height_reached = 0;
 
-        $select_sql = 'SELECT high_score, height_reached FROM scores WHERE user_name = $1';
+        $select_sql = 'SELECT high_score, height_reached FROM normal_scores WHERE user_name = $1';
         $result = pg_query_params($conn, $select_sql, [$username]);
 
         if ($result && $row = pg_fetch_assoc($result)) {
@@ -821,7 +821,7 @@
             gameState = "gameover";
 
             if (newRecord) {
-                fetch('saveScore.php', {
+                fetch('../config/save_score.php', {
                     method: 'POST',
                     body: new URLSearchParams({ bestCoins, bestScore })
                 })
