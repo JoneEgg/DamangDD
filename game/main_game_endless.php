@@ -23,14 +23,65 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <meta charset="UTF-8">
-    <title>Damang, Don't Drown!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Menu</title>
     <link rel="stylesheet" href="../assets/css/styles.css">
-<style>
-</style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #nav_bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 20;
+            background-color: #ffffff;
+        }
+
+        #nav_bar .nav.nav-tabs {
+            justify-content: center;
+        }
+
+        #gameCanvas {
+            position: fixed;
+            left: 0;
+            z-index: 1;
+            display: block;
+        }
+    </style>
 </head>
 <body id="main_body">
+    <div id="container">
+        <div id="nav_bar">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" aria-current="page" href="../game/main_game.php">Play</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" aria-current="page" href="../game/main_game_endless.php">Play Endless</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../game/scoreboard.php">Scoreboards</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="../game/user_profile.php">Profile</a>
+                </li>
+            </ul>
+        </div>
 
 <canvas id="gameCanvas"></canvas>
 <img id="spiderGifOverlay" src="../assets/images/dante.gif" alt="Dante" style="position: fixed; display: none; pointer-events: none; image-rendering: pixelated; z-index: 10;">
@@ -50,6 +101,19 @@
     canvas.height = window.innerHeight;
     const gameWidth = 600;
     let gameLeft = (canvas.width - gameWidth) / 2;
+
+    const navBarEl = document.getElementById("nav_bar");
+    let navHeight = 0;
+
+    function syncViewportLayout() {
+        navHeight = navBarEl ? Math.ceil(navBarEl.getBoundingClientRect().height) : 0;
+        canvas.style.top = `${navHeight}px`;
+        canvas.width = window.innerWidth;
+        canvas.height = Math.max(200, window.innerHeight - navHeight);
+        gameLeft = (canvas.width - gameWidth) / 2;
+    }
+
+    syncViewportLayout();
 
     let gameState = "playing"; // "playing" | "paused" | "gameover"
     const pauseButton = { x: 0, y: 0, width: 140, height: 38 };
@@ -2263,7 +2327,7 @@
 
             // 7. Left & right playfield edge borders (keeps top HUD unobstructed)
             context.save();
-            context.fillStyle = "#1e293b";
+            context.fillStyle = "#ffffff";
             if (gameLeft > 0) {
                 context.fillRect(0, 0, gameLeft, canvas.height);
             }
@@ -2503,20 +2567,18 @@
         PlayerSystem.clearAllInputs();
     });
     window.addEventListener("resize", function() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        gameLeft = (canvas.width - gameWidth) / 2;
+        syncViewportLayout();
     });
     function drawHud() {
         ctx.save();
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = "#030303";
         ctx.font = "bold 20px 'Courier New', Courier, monospace";
 
         // Right sidebar outside the central 600px column
         const rightSidebarX = Math.min(canvas.width - 16, gameLeft + gameWidth + 20);
         ctx.textAlign = "left";
         ctx.fillText("Lives Left: " + TerrainSystem.lives + " / " + PlayerSystem.state.maxLives, rightSidebarX, 36);
-        ctx.fillText("Coins: " + TerrainSystem.foodCount, rightSidebarX, 64);
+        ctx.fillText("Food: " + TerrainSystem.foodCount, rightSidebarX, 64);
         ctx.fillText("Height: " + TerrainSystem.score, rightSidebarX, 92);
 
         // Endless mode food-to-life meter
@@ -2618,7 +2680,7 @@
 
         ctx.font = "bold 18px 'Courier New', Courier, monospace";
         ctx.fillStyle = "#e2e8f0";
-        ctx.fillText("Height: " + TerrainSystem.score + "  |  Coins: " + TerrainSystem.foodCount, centerX, panelTop + 42);
+        ctx.fillText("Height: " + TerrainSystem.score + "  |  Food: " + TerrainSystem.foodCount, centerX, panelTop + 42);
 
         // Resume button
         pauseButtons.resume.x = centerX - pauseButtons.resume.width / 2;
