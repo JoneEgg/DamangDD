@@ -29,7 +29,7 @@
                     <a class="nav-link" aria-current="page" href="../game/main_game.php">Play</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" aria-current="page" href="../game/main_game_endless.php">Play Endless</a>
+                    <a class="nav-link" aria-current="page" href="../game/main_game_endless.php">Endless</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link active" aria-current="page" href="../game/scoreboard.php">Scoreboards</a>
@@ -42,7 +42,7 @@
 
 
         <div id="banner">
-            <img id="logo_img" src="../assets/images/DDD_logo.png" alt="Damang, Don't Drown! Logo">
+            <img id="logo_img" src="../assets/images/DD_logo.png" alt="Damang, Don't Drown! Logo">
         </div>
         <p><b>Scoreboard</b><br></p>
        

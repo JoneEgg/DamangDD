@@ -39,7 +39,7 @@
                     <a class="nav-link" aria-current="page" href="../game/main_game.php">Play</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" aria-current="page" href="../game/main_game_endless.php">Play Endless</a>
+                    <a class="nav-link" aria-current="page" href="../game/main_game_endless.php">Endless</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="../game/scoreboard.php">Scoreboards</a>

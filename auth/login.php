@@ -45,7 +45,7 @@
 <body id="form_body">
     <div id="container">
         <div id="banner">
-            <img id="logo_img" src="../assets/images/DDD_logo.png" alt="Damang, Don't Drown! Logo">
+            <img id="logo_img" src="../assets/images/DD_logo.png" alt="Damang, Don't Drown! Logo">
         </div>
         
         <form method="POST">
