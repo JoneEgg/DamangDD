@@ -17,7 +17,7 @@
     }
 
     $query = 'SELECT s.user_name, s.high_score, s.height_reached, u.status
-             FROM endless_scores as s
+             FROM scores as s
              LEFT JOIN user_details as u ON s.user_name = u.user_name
              ORDER BY s.high_score DESC
              ';
@@ -41,7 +41,7 @@
 
     <div id="container">
         <div id="banner">
-            <img id="logo_img" src="../assets/images/DDD_logo.png" alt="Damang, Don't Drown! Logo">
+            <img id="logo_img" src="../assets/images/DD_logo.png" alt="Damang, Don't Drown! Logo">
         </div>
         <p><b>Welcome to Admin Access!</b><br></p>
        
@@ -51,6 +51,7 @@
                     <th>User</th>
                     <th>Score</th>
                     <th>Height</th>
+                    <th>Status</th>
                     <th></th>
                 </tr>
 
@@ -66,6 +67,7 @@
                             <td><?php echo $uname ?></td>
                             <td><?php echo $u['high_score'] ?> </td>
                             <td><?php echo $u['height_reached'] ?> </td>
+                            <td><?php echo $u['status'] ?> </td>
                             <td> <button class="btn-outline theme-secondary" type="submit" name="change_status" value="<?php echo $uname ?>" class="btn <?php echo $btn_class; ?>"><?php echo $btn_label ?></button> </td>
                         </tr>
                     <?php endforeach; ?>                    

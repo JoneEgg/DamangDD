@@ -27,15 +27,19 @@ table, th, td {
     background-image: url(../images/rain_bg.png);
     background-repeat: repeat;
     background-size: 200px;
-    animation: moveBg 5s linear infinite;
+    /* animation: moveBg 5s linear infinite; */
+}
+
+.list-group{
+    width: 100%;
 }
 
 
-@keyframes moveBg{
+/* @keyframes moveBg{
     from {background-position: top;}
     to {background-position: bottom;}
     
-}
+} */
 
 #gameCanvas {
     display: block;
@@ -51,7 +55,7 @@ form {
     margin:auto;
     margin-top: 50px;;
     padding: 5px;
-    width: 600px;
+    width: 700px;
     height: 100%;
 }
 

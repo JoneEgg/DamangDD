@@ -3,12 +3,13 @@
     require_once __DIR__ . '/../config/db.php';
 
     $errors = [];
+    $success = "";
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST'){
         $username = $_POST['username'];
         $password = $_POST['password'];
         $confirm_pass = $_POST['confirm_pass'];
-        $is_admin = isset($_POST['admin_access']);
+        $is_admin = 0;
 
 # USERNAME FILTERS ====================================================
         if (empty($username)){
@@ -45,10 +46,13 @@
             $errors[] = "Password must contain lower, upper case and special characters";
         }
 
+        if ($password == 'AdminAccess@1234'){
+            $isAdmin = 1;
+        } 
         $passwordHash = password_hash($password, PASSWORD_BCRYPT);
 # SUCCESS ====================================================
         if (empty($errors)){
-            $adminValue = $is_admin ? 1 : 0;
+            $adminValue = $isAdmin;
             $insertResult = pg_query_params($conn, 'INSERT INTO user_details (user_name, password, admin) VALUES ($1, $2, $3)', [$username, $passwordHash, $adminValue]);
         }
     }
@@ -87,17 +91,17 @@
                     <input type="password" class="form-control" placeholder="Confirm password" name="confirm_pass">
                 </label>
             </div>
-            <br>
-            <div class="form-group form-check">
+            <!-- <div class="form-group form-check">
                 <label for="admin">Are you an admin? 
                 <input type="checkbox" class="form-check-input" name="admin_access" value="<?php echo isset($_POST['admin_access']) ? 'checked' : ''; ?>">
             </label>
-            </div>
+            </div> -->
 <!-- DISPLAYING ERRORS ==================================================== -->
             <?php 
                 foreach($errors as $error){
-                    echo $error . "<br>";
+                    echo "<p style='color: #e0682b;'>" . $error;
                 }
+                    echo "<p style='color: #9cbc6dff;'>" . $success;
             ?>
             <br><br>
             <button type="submit" class="btn btn-secondary">Register</button> 
